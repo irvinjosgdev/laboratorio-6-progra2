@@ -1,0 +1,199 @@
+openapi: 3.0.3
+info:
+  title: API de Reservas de Hotel
+  description: API para administrar las reservas de un hotel.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: Reservas
+
+paths:
+  /api/reservas:
+    get:
+      tags: [Reservas]
+      summary: Consultar reservas
+      description: Retorna la lista completa de reservas registradas.
+      operationId: consultarReservas
+      responses:
+        "200":
+          description: Lista de reservas obtenida correctamente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reserva"
+    post:
+      tags: [Reservas]
+      summary: Crear reserva
+      description: Registra una nueva reserva de habitacion.
+      operationId: crearReserva
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservaRequest"
+      responses:
+        "201":
+          description: Reserva creada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+        "400":
+          description: Datos de la reserva invalidos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/reservas/{id}:
+    get:
+      tags: [Reservas]
+      summary: Consultar reserva por id
+      description: Busca una reserva por su identificador.
+      operationId: consultarReservaPorId
+      parameters:
+        - $ref: "#/components/parameters/ReservaId"
+      responses:
+        "200":
+          description: Reserva encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+        "404":
+          description: No existe una reserva con el id indicado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags: [Reservas]
+      summary: Actualizar reserva
+      description: Actualiza los datos de una reserva existente.
+      operationId: actualizarReserva
+      parameters:
+        - $ref: "#/components/parameters/ReservaId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservaRequest"
+      responses:
+        "200":
+          description: Reserva actualizada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+        "400":
+          description: Datos de la reserva invalidos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: No existe una reserva con el id indicado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/reservas/{id}/cancelar:
+    patch:
+      tags: [Reservas]
+      summary: Cancelar reserva
+      description: Cambia el estado de una reserva a CANCELADA sin eliminar su registro.
+      operationId: cancelarReserva
+      parameters:
+        - $ref: "#/components/parameters/ReservaId"
+      responses:
+        "200":
+          description: Reserva cancelada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+        "404":
+          description: No existe una reserva con el id indicado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: La reserva ya se encuentra cancelada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    ReservaId:
+      name: id
+      in: path
+      required: true
+      description: Identificador de la reserva.
+      schema:
+        type: integer
+        format: int64
+
+  schemas:
+    EstadoReserva:
+      type: string
+      description: Estado actual de la reserva.
+      enum:
+        - PENDIENTE
+        - CONFIRMADA
+        - CANCELADA
+
+    ReservaRequest:
+      type: object
+      required:
+        - nombreCliente
+        - habitacion
+        - fechaEntrada
+        - fechaSalida
+        - estado
+      properties:
+        nombreCliente:
+          type: string
+          example: Maria Lopez
+        habitacion:
+          type: string
+          example: "101"
+        fechaEntrada:
+          type: string
+          format: date
+          example: "2026-09-20"
+        fechaSalida:
+          type: string
+          format: date
+          example: "2026-09-25"
+        estado:
+          $ref: "#/components/schemas/EstadoReserva"
+
+    Reserva:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 1
+        - $ref: "#/components/schemas/ReservaRequest"
+
+    ErrorResponse:
+      type: object
+      properties:
+        mensaje:
+          type: string
+          example: No existe una reserva con el id indicado.
+        codigo:
+          type: integer
+          example: 404
